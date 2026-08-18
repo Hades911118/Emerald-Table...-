@@ -1,0 +1,15 @@
+{
+  "name": "emerald-table-blackjack-server",
+  "version": "1.0.0",
+  "description": "Multiplayer lobby/game server for Emerald Table Blackjack",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
