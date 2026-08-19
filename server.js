@@ -170,11 +170,9 @@ class Lobby {
   startCountdown() {
     if (this.phase !== 'waiting') return;
     this.phase = 'countdown';
-    this.deadline = Date.now() + LOBBY_WAIT_MS;
+    this.deadline = null;
     this.clearTimer();
-    this.timer = setTimeout(() => this.fillAndStart(), LOBBY_WAIT_MS);
     if (this.players.length >= MAX_SEATS) {
-      this.clearTimer();
       this.fillAndStart();
     } else {
       this.broadcast();
