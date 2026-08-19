@@ -4,54 +4,75 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Emerald Table Blackjack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Playfair+Display:ital,wght@0,600;0,700;0,900;1,700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --felt-dark: #0b3d2e; --felt: #0f5c3f; --felt-light: #167a52;
-    --gold: #d4af37; --gold-bright: #f2d675; --cream: #f4ecd8; --ink: #1a1a1a;
-    --red: #b3261e; --shadow: rgba(0,0,0,0.45);
+    --felt-dark: #0a3a2c; --felt: #0e5c3d; --felt-light: #1a7d54;
+    --gold: #cda43a; --gold-bright: #f2d675; --gold-dim: #8a6d1f; --cream: #f4ecd8; --ink: #1a1a1a;
+    --red: #b3261e; --shadow: rgba(0,0,0,0.5); --win: #4fae6a; --lose: #d9564e;
   }
   * { box-sizing: border-box; }
   html, body {
-    height: 100%; margin: 0; font-family: 'Georgia','Iowan Old Style',serif;
-    background: radial-gradient(ellipse at center, var(--felt) 0%, var(--felt-dark) 75%);
-    color: var(--cream); overflow: hidden;
+    height: 100%; margin: 0; font-family: 'Cormorant Garamond','Iowan Old Style',serif;
+    background:
+      radial-gradient(ellipse 60% 45% at 50% 8%, rgba(255,255,255,.05), transparent 60%),
+      radial-gradient(circle at 20% 90%, rgba(0,0,0,.35), transparent 45%),
+      radial-gradient(circle at 85% 15%, rgba(0,0,0,.3), transparent 40%),
+      radial-gradient(ellipse at center, var(--felt) 0%, var(--felt-dark) 78%);
+    background-attachment: fixed;
+    color: var(--cream); overflow: hidden; font-size: 17px;
+  }
+  body::before {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.05; mix-blend-mode:overlay;
+    background-image: radial-gradient(circle, rgba(255,255,255,.9) 1px, transparent 1.4px);
+    background-size: 5px 5px;
   }
   .screen { position: fixed; inset: 0; display: none; }
   .screen.active { display: flex; }
+  h1,h2,.brandmark,.menu-title,.mp-dealer-zone .label,.s-zone-label { font-family: 'Playfair Display', serif; }
 
   /* ---------- shared widgets ---------- */
   .btn {
-    padding: 11px 22px; border-radius: 5px; border: 1px solid var(--gold);
-    background: linear-gradient(180deg, #1a5c3f, #0d3a28); color: var(--gold-bright);
-    font-family: inherit; font-size: 14px; letter-spacing: 1px; text-transform: uppercase;
-    cursor: pointer; box-shadow: 0 3px 6px var(--shadow); transition: transform .1s, background .2s;
+    padding: 12px 24px; border-radius: 4px; border: 1px solid var(--gold);
+    background: linear-gradient(180deg, #1c5e40, #0d3826); color: var(--gold-bright);
+    font-family: 'Playfair Display', serif; font-weight:600; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase;
+    text-align: center; display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 3px 10px var(--shadow), inset 0 1px 0 rgba(255,255,255,.08); transition: transform .15s, box-shadow .15s, background .2s;
   }
-  .btn:hover:not(:disabled) { background: linear-gradient(180deg,#226e4b,#114730); transform: translateY(-2px); }
+  .btn:hover:not(:disabled) { background: linear-gradient(180deg,#237049,#0f4530); transform: translateY(-2px); box-shadow: 0 6px 16px var(--shadow), inset 0 1px 0 rgba(255,255,255,.12); }
+  .btn:active:not(:disabled) { transform: translateY(0); }
   .btn:disabled { opacity: .3; cursor: default; }
-  .btn.primary { background: linear-gradient(180deg, var(--gold-bright), var(--gold)); color:#2b1810; border-color:#8a6d1f; }
-  .btn.primary:hover:not(:disabled) { background: linear-gradient(180deg,#fbe79a,#e0bd4e); }
+  .btn.primary { background: linear-gradient(180deg, var(--gold-bright), var(--gold)); color:#2b1810; border-color:var(--gold-dim); text-shadow: 0 1px 0 rgba(255,255,255,.3); }
+  .btn.primary:hover:not(:disabled) { background: linear-gradient(180deg,#fbe79a,#dcb84a); }
   .btn.ghost { background: transparent; }
   input[type=text] {
-    font-family: inherit; padding: 12px 14px; border-radius: 5px; border: 1px solid rgba(212,175,55,.4);
-    background: rgba(0,0,0,.25); color: var(--cream); font-size: 15px; letter-spacing: 1px; outline: none;
-    text-align: center;
+    font-family: 'Cormorant Garamond', serif; padding: 13px 14px; border-radius: 4px; border: 1px solid rgba(205,164,58,.45);
+    background: rgba(0,0,0,.28); color: var(--cream); font-size: 17px; font-weight:600; letter-spacing: 1.5px; outline: none;
+    text-align: center; box-shadow: inset 0 2px 6px rgba(0,0,0,.35);
   }
-  input[type=text]:focus { border-color: var(--gold); }
-  .brandmark { font-size: 15px; letter-spacing: 6px; text-transform: uppercase; color: rgba(212,175,55,.7); text-align:center; }
+  input[type=text]:focus { border-color: var(--gold-bright); box-shadow: inset 0 2px 6px rgba(0,0,0,.35), 0 0 0 2px rgba(242,214,117,.2); }
+  .brandmark { font-size: 16px; letter-spacing: 7px; text-transform: uppercase; color: rgba(205,164,58,.75); text-align:center; font-weight:600; }
   .subtle { color: rgba(244,236,216,.55); font-size: 12px; letter-spacing: 1px; }
   .card-box { background: rgba(0,0,0,.22); border: 1px solid rgba(212,175,55,.3); border-radius: 10px; padding: 26px 30px; }
   .err { color: #ff8c82; font-size: 13px; min-height: 16px; }
 
   /* ---------- menu ---------- */
-  #screen-menu, #screen-mp-menu { align-items: center; justify-content: center; }
+  #screen-menu, #screen-mp-menu { align-items: center; justify-content: center; z-index:1; }
   .menu-wrap { display: flex; flex-direction: column; align-items: center; gap: 22px; }
-  .menu-title { font-size: 30px; letter-spacing: 3px; color: var(--gold-bright); text-shadow: 0 2px 8px var(--shadow); }
+  .menu-title {
+    font-size: 42px; font-weight:900; letter-spacing: 2px; text-transform: none;
+    background: linear-gradient(180deg, #fbe79a 10%, var(--gold) 55%, #a9822c 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 2px 18px rgba(0,0,0,.5); filter: drop-shadow(0 1px 0 rgba(255,255,255,.15));
+  }
   .menu-buttons { display: flex; flex-direction: column; gap: 12px; width: 260px; }
   .menu-buttons .btn { width: 100%; }
   .name-row { display:flex; flex-direction:column; gap:8px; align-items:center; }
   .settings-link { position:absolute; bottom:16px; right:20px; font-size:11px; letter-spacing:1px; color:rgba(244,236,216,.4); cursor:pointer; text-transform:uppercase; }
   .settings-link:hover { color: var(--gold-bright); }
-  .back-link { position:absolute; top:18px; left:20px; font-size:11px; letter-spacing:1px; color:rgba(244,236,216,.5); cursor:pointer; text-transform:uppercase; }
+  .back-link { position:absolute; top:18px; left:20px; font-size:11px; letter-spacing:1px; color:rgba(244,236,216,.5); cursor:pointer; text-transform:uppercase; z-index:5; }
   .back-link:hover { color: var(--gold-bright); }
 
   /* ---------- lobby ---------- */
@@ -68,91 +89,134 @@
   /* ---------- table (multiplayer) ---------- */
   #screen-table { flex-direction: column; }
   .mp-table {
-    position: relative; width:100%; height:100%; display:flex; flex-direction:column;
-    background: radial-gradient(ellipse at 50% 30%, rgba(255,255,255,.05), transparent 60%),
-                radial-gradient(ellipse at center, var(--felt) 0%, var(--felt-dark) 78%);
-    border: 14px solid #2b1810; border-image: linear-gradient(160deg,#4a2e18,#2b1810 40%,#1a0e08 100%) 1;
+    position: relative; width:100%; height:100%; display:flex; flex-direction:column; overflow:hidden;
+    background:
+      radial-gradient(ellipse 55% 40% at 50% 22%, rgba(255,255,255,.07), transparent 62%),
+      radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,.35) 100%),
+      radial-gradient(ellipse at center, var(--felt) 0%, var(--felt-dark) 78%);
+    box-shadow: inset 0 0 60px rgba(0,0,0,.5);
   }
-  .mp-code-tag { position:absolute; top:14px; left:20px; font-size:11px; letter-spacing:1px; color:rgba(244,236,216,.45); }
-  .mp-dealer-zone { display:flex; flex-direction:column; align-items:center; gap:4px; padding: 44px 0 6px; }
-  .mp-dealer-zone .label { font-size:11px; letter-spacing:3px; text-transform:uppercase; color:rgba(244,236,216,.5); }
-  .mp-dealer-zone .value { font-size:15px; color:var(--gold-bright); font-weight:bold; }
+  .mp-code-tag { position:absolute; top:14px; left:20px; font-size:11px; letter-spacing:1.5px; color:rgba(205,164,58,.6); font-weight:600; text-transform:uppercase; }
+  .mp-dealer-zone { position:relative; display:flex; flex-direction:column; align-items:center; gap:5px; padding: 44px 0 6px; }
+  .mp-dealer-zone .label { font-size:12px; font-weight:600; letter-spacing:4px; text-transform:uppercase; color:rgba(205,164,58,.65); }
+  .mp-dealer-zone .value { font-size:16px; color:var(--gold-bright); font-weight:700; font-family:'Playfair Display',serif; }
   .mp-hand { display:flex; gap:6px; min-height:64px; }
   .mp-card {
-    width:40px; height:58px; border-radius:5px; background:var(--cream); display:flex; flex-direction:column;
-    justify-content:space-between; padding:3px 4px; font-size:12px; font-weight:bold; box-shadow:0 2px 5px var(--shadow);
+    width:42px; height:60px; border-radius:5px; background: linear-gradient(160deg,#fffdf7,var(--cream)); display:flex; flex-direction:column; position:relative; overflow:hidden;
+    justify-content:space-between; padding:3px 4px; font-size:12px; font-weight:700; box-shadow:0 3px 7px var(--shadow), inset 0 0 0 1px rgba(0,0,0,.06);
   }
+  .mp-card::after { content:''; position:absolute; top:-40%; left:-15%; width:60%; height:180%; background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.55) 48%,transparent 56%); pointer-events:none; }
   .mp-card.red { color: var(--red); } .mp-card.black { color: var(--ink); }
   .mp-card.back {
     background: repeating-linear-gradient(135deg, var(--felt-light), var(--felt-light) 5px, var(--felt-dark) 5px, var(--felt-dark) 10px);
     border: 2px solid var(--gold);
   }
-  .mp-center-msg { text-align:center; min-height: 30px; font-size: 16px; letter-spacing:1px; color: var(--gold-bright); }
-  .mp-seats { flex:1; display:flex; align-items:flex-end; justify-content:center; gap:10px; padding: 6px 10px 10px; flex-wrap: wrap; }
+  .mp-card.back::after { content:'♠'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:none; font-size:16px; color:var(--gold); opacity:.65; }
+  .mp-center-msg { text-align:center; min-height: 34px; font-size: 17px; letter-spacing:1.5px; font-weight:600; font-family:'Playfair Display',serif; color: var(--gold-bright); transition: color .2s; }
+  .mp-center-msg.win { color: var(--win); } .mp-center-msg.lose { color: var(--lose); }
+  .mp-seats { flex:1; display:flex; align-items:flex-end; justify-content:center; gap:10px; padding: 6px 10px 10px; flex-wrap: wrap; position:relative; z-index:1; }
   .mp-seat {
-    width: 150px; display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px; border-radius:8px;
-    background: rgba(0,0,0,.18); border: 1px solid rgba(212,175,55,.18); transition: border-color .2s, box-shadow .2s;
+    width: 150px; display:flex; flex-direction:column; align-items:center; gap:4px; padding:9px 8px; border-radius:9px;
+    background: linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.12)); border: 1px solid rgba(205,164,58,.2); transition: border-color .25s, box-shadow .25s;
   }
-  .mp-seat.turn { border-color: var(--gold-bright); box-shadow: 0 0 12px rgba(242,214,117,.5); }
-  .mp-seat.me { background: rgba(212,175,55,.08); }
-  .mp-seat .seat-name { font-size: 12px; letter-spacing:.5px; }
-  .mp-seat .seat-name .you-tag { color: var(--gold-bright); font-size:9px; margin-left:4px; }
-  .mp-seat .seat-money { font-size:10px; color: rgba(244,236,216,.55); }
-  .mp-seat .seat-status { font-size:10px; letter-spacing:1px; text-transform:uppercase; color: var(--gold-bright); min-height:12px; }
-  .mp-bottom { padding: 10px 0 16px; display:flex; flex-direction:column; align-items:center; gap:10px; z-index:2; }
+  .mp-seat.turn { border-color: var(--gold-bright); box-shadow: 0 0 0 1px rgba(242,214,117,.4), 0 0 18px rgba(242,214,117,.45); animation: seat-pulse 1.6s ease-in-out infinite; }
+  @keyframes seat-pulse { 0%,100%{ box-shadow: 0 0 0 1px rgba(242,214,117,.4), 0 0 14px rgba(242,214,117,.35);} 50%{ box-shadow: 0 0 0 1px rgba(242,214,117,.6), 0 0 24px rgba(242,214,117,.6);} }
+  .mp-seat.me { background: linear-gradient(180deg, rgba(205,164,58,.14), rgba(205,164,58,.05)); border-color: rgba(205,164,58,.4); }
+  .mp-seat .seat-name { font-size: 13px; font-weight:600; letter-spacing:.5px; }
+  .mp-seat .seat-name .you-tag { color: var(--gold-bright); font-size:9px; margin-left:4px; letter-spacing:1px; }
+  .mp-seat .seat-money { font-size:11px; color: rgba(244,236,216,.6); }
+  .mp-seat .seat-status { font-size:10px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color: var(--gold-bright); min-height:12px; }
+  .mp-seat .seat-status.bust, .mp-seat .seat-status.surrendered { color: var(--lose); }
+  .mp-seat .seat-status.blackjack, .mp-seat .seat-status.stood { color: var(--win); }
+  .mp-bottom { padding: 10px 0 18px; display:flex; flex-direction:column; align-items:center; gap:12px; z-index:2; }
   .mp-actions { display:flex; gap:8px; min-height: 44px; flex-wrap: wrap; justify-content:center; padding: 0 10px; }
-  .mp-bet-chips { display:flex; gap:10px; }
-  .chip { width:50px; height:50px; border-radius:50%; border:3px dashed rgba(255,255,255,.65); display:flex; align-items:center; justify-content:center;
-          font-weight:bold; font-size:12px; color:white; cursor:pointer; box-shadow:0 3px 8px var(--shadow); user-select:none; }
-  .chip:hover { transform: translateY(-3px); }
+  .mp-bet-chips { display:flex; gap:12px; justify-content:center; }
+  .chip {
+    width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-family:'Playfair Display',serif; font-size:12px; color:white; cursor:pointer; user-select:none;
+    position:relative; box-shadow:0 4px 10px var(--shadow), inset 0 2px 3px rgba(255,255,255,.25), inset 0 -3px 5px rgba(0,0,0,.35);
+    background-image: repeating-conic-gradient(rgba(255,255,255,.85) 0deg 12deg, transparent 12deg 24deg);
+    transition: transform .15s;
+  }
+  .chip::before { content:''; position:absolute; inset:6px; border-radius:50%; background: inherit; box-shadow: inset 0 2px 4px rgba(255,255,255,.2), inset 0 -2px 5px rgba(0,0,0,.4); }
+  .chip span { position:relative; z-index:2; }
+  .chip:hover { transform: translateY(-4px) scale(1.04); }
   .chip.disabled { opacity:.35; pointer-events:none; }
-  .chip.c25 { background: radial-gradient(circle,#1e7a3d,#0d4a22); }
-  .chip.c50 { background: radial-gradient(circle,#4a4a4a,#1a1a1a); }
-  .chip.c100 { background: radial-gradient(circle,#1e4f8a,#0d2a4a); }
-  .chip.c250 { background: radial-gradient(circle,#8a1e1e,#4a0d0d); }
-  .end-overlay { position:absolute; inset:0; background: rgba(5,10,8,.88); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; z-index:20; }
-  .end-overlay .title { font-size: 24px; color: var(--gold-bright); letter-spacing:2px; text-transform:uppercase; }
+  .chip.c25 { background-color:#1e7a3d; } .chip.c25::before { background: radial-gradient(circle,#2c9950,#164d29); }
+  .chip.c50 { background-color:#3a3a3a; } .chip.c50::before { background: radial-gradient(circle,#5c5c5c,#1a1a1a); }
+  .chip.c100 { background-color:#1e4f8a; } .chip.c100::before { background: radial-gradient(circle,#2c6bb8,#0d2a4a); }
+  .chip.c250 { background-color:#8a1e1e; } .chip.c250::before { background: radial-gradient(circle,#b82c2c,#4a0d0d); }
+  .end-overlay { position:absolute; inset:0; background: radial-gradient(ellipse at 50% 40%, rgba(20,35,28,.92), rgba(3,8,6,.96)); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; z-index:20; }
+  .end-overlay .title { font-family:'Playfair Display',serif; font-size: 27px; font-weight:700; color: var(--gold-bright); letter-spacing:2px; text-transform:uppercase; text-shadow: 0 2px 12px rgba(0,0,0,.6); }
 
   /* ---------- settings modal ---------- */
-  .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; z-index:50; }
+  .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter: blur(2px); display:none; align-items:center; justify-content:center; z-index:50; }
   .modal-backdrop.active { display:flex; }
-  .modal { background: var(--felt-dark); border:1px solid var(--gold); border-radius:8px; padding:24px; width:90%; max-width:380px; display:flex; flex-direction:column; gap:12px; }
-  .modal label { font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(244,236,216,.6); }
+  .modal { background: linear-gradient(180deg,#0e4530,var(--felt-dark)); border:1px solid var(--gold); border-radius:8px; padding:26px; width:90%; max-width:380px; display:flex; flex-direction:column; gap:12px; box-shadow: 0 20px 50px rgba(0,0,0,.6); }
+  .modal label { font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:rgba(205,164,58,.7); }
   .modal input { width:100%; }
 
   /* ---------- solo screen embeds original layout ---------- */
   #screen-solo { flex-direction: column; }
-  .s-table { position:relative; width:100%; height:100%; display:flex; flex-direction:column; justify-content:space-between;
-    background: radial-gradient(ellipse at 50% 30%, rgba(255,255,255,.05), transparent 60%), radial-gradient(ellipse at center, var(--felt) 0%, var(--felt-dark) 78%);
-    border: 14px solid #2b1810; border-image: linear-gradient(160deg,#4a2e18,#2b1810 40%,#1a0e08 100%) 1; }
-  .s-arc { position:absolute; top:46%; left:50%; transform:translate(-50%,-50%); width:130%; height:220px; border:3px solid rgba(212,175,55,.25); border-radius:50%; pointer-events:none; }
+  .s-table { position:relative; width:100%; height:100%; display:flex; flex-direction:column; justify-content:space-between; overflow:hidden;
+    background:
+      radial-gradient(ellipse 55% 40% at 50% 20%, rgba(255,255,255,.07), transparent 62%),
+      radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,.35) 100%),
+      radial-gradient(ellipse at center, var(--felt) 0%, var(--felt-dark) 78%);
+    box-shadow: inset 0 0 60px rgba(0,0,0,.5); }
+  .s-arc { position:absolute; top:46%; left:50%; transform:translate(-50%,-50%); width:130%; height:220px; border:1px solid rgba(205,164,58,.22); border-radius:50%; pointer-events:none; }
   .s-zone { position:relative; display:flex; flex-direction:column; align-items:center; gap:8px; padding:10px 0; z-index:2; }
-  .s-zone-label { font-size:11px; letter-spacing:3px; text-transform:uppercase; color:rgba(244,236,216,.5); height:14px; }
+  .s-zone-label { font-size:12px; font-weight:600; letter-spacing:4px; text-transform:uppercase; color:rgba(205,164,58,.65); height:14px; }
   .s-hand { display:flex; min-height:118px; align-items:flex-start; justify-content:center; }
-  .s-hand-value { font-size:15px; color:var(--gold-bright); font-weight:bold; letter-spacing:1px; min-height:18px; }
+  .s-hand-value { font-size:16px; color:var(--gold-bright); font-weight:700; font-family:'Playfair Display',serif; letter-spacing:1px; min-height:18px; }
   .s-card-outer { width:76px; height:108px; margin-left:-34px; position:relative; perspective:800px; animation: s-deal .5s cubic-bezier(.22,.68,.35,1) both; animation-delay: var(--deal-delay,0ms); }
   .s-card-outer:first-child { margin-left:0; }
   .s-card-inner { position:relative; width:100%; height:100%; transform-style:preserve-3d; transition: transform .55s cubic-bezier(.45,.05,.15,1); }
   .s-card-inner.flipped { transform: rotateY(180deg); }
-  .s-card-face { position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden; border-radius:7px; box-shadow:0 4px 10px var(--shadow),0 0 0 1px rgba(0,0,0,.15); display:flex; flex-direction:column; justify-content:space-between; padding:6px 7px; font-weight:bold; }
-  .s-card-face.front { background: var(--cream); } .s-card-face.front.red { color: var(--red); } .s-card-face.front.black { color: var(--ink); }
+  .s-card-face { position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden; border-radius:7px; box-shadow:0 5px 14px var(--shadow),0 0 0 1px rgba(0,0,0,.15); display:flex; flex-direction:column; justify-content:space-between; padding:6px 7px; font-weight:700; overflow:hidden; }
+  .s-card-face.front { background: linear-gradient(160deg,#fffdf7,var(--cream)); } .s-card-face.front.red { color: var(--red); } .s-card-face.front.black { color: var(--ink); }
+  .s-card-face.front::after { content:''; position:absolute; top:-40%; left:-15%; width:55%; height:180%; background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.6) 48%,transparent 56%); pointer-events:none; }
   .s-card-face.back-face { background: repeating-linear-gradient(135deg, var(--felt-light), var(--felt-light) 6px, var(--felt-dark) 6px, var(--felt-dark) 12px); border:3px solid var(--gold); transform: rotateY(180deg); }
   .s-card-face.back-face::after { content:"♠"; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:26px; color:var(--gold); opacity:.7; }
-  .s-card-face .corner { display:flex; flex-direction:column; align-items:center; line-height:1; font-size:16px; }
+  .s-card-face .corner { display:flex; flex-direction:column; align-items:center; line-height:1; font-size:17px; font-family:'Playfair Display',serif; }
   .s-card-face .corner.bottom { transform: rotate(180deg); align-self:flex-end; }
-  .s-card-face .suit-mid { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:30px; }
+  .s-card-face .suit-mid { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:32px; }
   @keyframes s-deal { 0%{transform:translateY(-70px) translateX(14px) rotate(-18deg) scale(.82); opacity:0;} 55%{transform:translateY(8px) translateX(-3px) rotate(3deg) scale(1.03); opacity:1;} 80%{transform:translateY(-2px) translateX(0) rotate(-1deg) scale(1);} 100%{transform:translateY(0) translateX(0) rotate(0) scale(1); opacity:1;} }
   .s-center-msg { position:absolute; top:48%; left:50%; transform:translate(-50%,-50%); z-index:5; text-align:center; pointer-events:none; }
-  .s-banner { display:inline-block; padding:10px 26px; border-radius:6px; background:rgba(10,20,15,.72); border:1px solid var(--gold); font-size:22px; letter-spacing:2px; text-transform:uppercase; color:var(--gold-bright); box-shadow:0 4px 20px var(--shadow); opacity:0; transition:opacity .3s; }
-  .s-banner.show { opacity:1; }
+  .s-banner {
+    display:inline-block; padding:12px 30px; border-radius:6px; background:linear-gradient(180deg, rgba(15,28,22,.85), rgba(6,14,10,.9));
+    border:1px solid var(--gold); font-family:'Playfair Display',serif; font-size:24px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+    color:var(--gold-bright); box-shadow:0 8px 30px var(--shadow); opacity:0; transform: scale(.9); transition:opacity .3s, transform .3s;
+  }
+  .s-banner.show { opacity:1; transform: scale(1); }
+  .s-banner.win { color: var(--win); border-color: var(--win); }
+  .s-banner.lose { color: var(--lose); border-color: var(--lose); }
   .s-bottom-panel { z-index:3; display:flex; flex-direction:column; align-items:center; gap:14px; padding:14px 0 20px; }
-  .s-stats-row { display:flex; gap:28px; font-size:14px; letter-spacing:1px; }
-  .s-stats-row .stat b { color:var(--gold-bright); font-size:17px; display:block; text-align:center; }
-  .s-stats-row .stat span { color:rgba(244,236,216,.55); font-size:10px; letter-spacing:2px; text-transform:uppercase; }
-  .s-chips-row { display:flex; gap:12px; align-items:center; }
-  .s-action-row { display:flex; gap:10px; min-height:46px; }
-  .s-bet-display { font-size:13px; color:rgba(244,236,216,.7); letter-spacing:1px; min-height:16px; }
-  .s-bet-display b { color:var(--gold-bright); font-size:16px; }
+  .s-stats-row { display:flex; gap:30px; font-size:14px; letter-spacing:1px; }
+  .s-stats-row .stat b { color:var(--gold-bright); font-size:19px; font-family:'Playfair Display',serif; display:block; text-align:center; }
+  .s-stats-row .stat span { color:rgba(205,164,58,.6); font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase; }
+  .s-chips-row { display:flex; gap:14px; align-items:center; justify-content:center; }
+  .s-action-row { display:flex; gap:10px; min-height:46px; justify-content:center; }
+  .s-bet-display { font-size:14px; color:rgba(244,236,216,.7); letter-spacing:1px; min-height:16px; }
+  .s-bet-display b { color:var(--gold-bright); font-size:17px; font-family:'Playfair Display',serif; }
+
+  .s-bet-spot { position:relative; z-index:1; display:flex; align-items:center; justify-content:center; height:82px; flex-shrink:0; }
+  .s-bet-spot-ring { position:absolute; width:76px; height:76px; border-radius:50%; border:2px dashed rgba(205,164,58,.35); transition: border-color .25s, box-shadow .25s; }
+  .s-bet-spot-ring.lit { border-color: rgba(242,214,117,.75); box-shadow: 0 0 16px rgba(242,214,117,.35); }
+  .s-bet-spot-stack { position:relative; width:76px; height:76px; }
+  .s-bet-spot-stack .mini-chip {
+    position:absolute; left:50%; top:50%; width:30px; height:30px; border-radius:50%;
+    background-image: repeating-conic-gradient(rgba(255,255,255,.85) 0deg 14deg, transparent 14deg 28deg);
+    box-shadow: 0 2px 5px rgba(0,0,0,.5), inset 0 1px 2px rgba(255,255,255,.3);
+    animation: mini-chip-land .35s cubic-bezier(.22,.68,.35,1) both;
+  }
+  .s-bet-spot-stack .mini-chip::before { content:''; position:absolute; inset:3px; border-radius:50%; }
+  @keyframes mini-chip-land { 0%{ transform: translate(-50%,-50%) scale(1.5); opacity:0; } 100%{ transform: translate(calc(-50% + var(--jx,0px)), calc(-50% + var(--jy,0px))) scale(1); opacity:1; } }
+  .s-bet-spot-amount {
+    position:relative; font-family:'Playfair Display',serif; font-weight:700; font-size:14px; color:var(--gold-bright);
+    text-shadow:0 2px 8px rgba(0,0,0,.75); pointer-events:none;
+  }
+  .chip-fly { position:fixed; border-radius:50%; pointer-events:none; z-index:999; box-shadow:0 4px 12px rgba(0,0,0,.55), inset 0 2px 3px rgba(255,255,255,.25); }
 
   @media (max-width: 560px) {
     .s-card-outer { width:58px; height:84px; margin-left:-26px; }
@@ -218,6 +282,11 @@
       <div class="mp-hand" id="mpDealerHand"></div>
     </div>
     <div class="mp-center-msg" id="mpCenterMsg">&nbsp;</div>
+    <div class="s-bet-spot" id="mpBetSpot">
+      <div class="s-bet-spot-ring"></div>
+      <div class="s-bet-spot-stack" id="mpBetStack"></div>
+      <div class="s-bet-spot-amount" id="mpBetSpotAmount"></div>
+    </div>
     <div class="mp-seats" id="mpSeats"></div>
     <div class="mp-bottom">
       <div id="mpBetArea" class="mp-bet-chips"></div>
@@ -243,6 +312,11 @@
       <div class="s-hand" id="s-dealerHand"></div>
     </div>
     <div class="s-center-msg"><div class="s-banner" id="s-banner"></div></div>
+    <div class="s-bet-spot" id="s-betSpot">
+      <div class="s-bet-spot-ring"></div>
+      <div class="s-bet-spot-stack" id="s-betStack"></div>
+      <div class="s-bet-spot-amount" id="s-betSpotAmount"></div>
+    </div>
     <div class="s-zone">
       <div class="s-hand" id="s-playerHand"></div>
       <div class="s-hand-value" id="s-playerValue">&nbsp;</div>
@@ -255,10 +329,10 @@
       </div>
       <div class="s-bet-display" id="s-betDisplay">Place your bet</div>
       <div class="s-chips-row" id="s-chipsRow">
-        <div class="chip c25" data-val="5" style="background:radial-gradient(circle,#4a4a4a,#1a1a1a);">$5</div>
-        <div class="chip c25" data-val="25" style="background:radial-gradient(circle,#1e7a3d,#0d4a22);">$25</div>
-        <div class="chip c25" data-val="100" style="background:radial-gradient(circle,#1e4f8a,#0d2a4a);">$100</div>
-        <div class="chip c25" data-val="500" style="background:radial-gradient(circle,#8a1e1e,#4a0d0d);">$500</div>
+        <div class="chip c50" data-val="5"><span>$5</span></div>
+        <div class="chip c25" data-val="25"><span>$25</span></div>
+        <div class="chip c100" data-val="100"><span>$100</span></div>
+        <div class="chip c250" data-val="500"><span>$500</span></div>
       </div>
       <div class="s-action-row" id="s-actionRow"></div>
     </div>
@@ -288,6 +362,29 @@ document.querySelectorAll('.screen').forEach(s => screens[s.id] = s);
 function showScreen(id) {
   Object.values(screens).forEach(s => s.classList.remove('active'));
   screens[id].classList.add('active');
+}
+
+/* Animate a cloned chip flying from a source element to a target element's center. */
+function flyChip(sourceEl, targetEl, onLand) {
+  if (!sourceEl || !targetEl) { onLand && onLand(); return; }
+  const src = sourceEl.getBoundingClientRect();
+  const tgt = targetEl.getBoundingClientRect();
+  const clone = sourceEl.cloneNode(true);
+  clone.classList.add('chip-fly');
+  clone.style.width = src.width + 'px';
+  clone.style.height = src.height + 'px';
+  clone.style.left = src.left + 'px';
+  clone.style.top = src.top + 'px';
+  clone.style.margin = '0';
+  document.body.appendChild(clone);
+  const dx = (tgt.left + tgt.width / 2) - (src.left + src.width / 2);
+  const dy = (tgt.top + tgt.height / 2) - (src.top + src.height / 2);
+  const anim = clone.animate([
+    { transform: 'translate(0,0) scale(1)', opacity: 1 },
+    { transform: `translate(${dx * 0.5}px, ${dy * 0.5 - 30}px) scale(.85)`, opacity: 1, offset: .5 },
+    { transform: `translate(${dx}px, ${dy}px) scale(.55)`, opacity: 0.95 },
+  ], { duration: 480, easing: 'cubic-bezier(.22,.68,.35,1)' });
+  anim.onfinish = () => { clone.remove(); onLand && onLand(); };
 }
 
 const SERVER_KEY = 'emeraldtable_server_url';
@@ -338,6 +435,10 @@ const SoloGame = (function () {
     playerValue: document.getElementById('s-playerValue'),
     dealerValue: document.getElementById('s-dealerValue'),
     banner: document.getElementById('s-banner'),
+    betSpot: document.getElementById('s-betSpot'),
+    betSpotRing: document.querySelector('#s-betSpot .s-bet-spot-ring'),
+    betStack: document.getElementById('s-betStack'),
+    betSpotAmount: document.getElementById('s-betSpotAmount'),
   };
 
   function freshShoe() {
@@ -388,9 +489,35 @@ const SoloGame = (function () {
     el.dealerValue.textContent = hideDealerHole ? (dealerHand.length ? ''+cardValue(dealerHand[0].rank) : '\u00A0') : (dealerHand.length ? handValue(dealerHand) : '\u00A0');
   }
   function resetHandDom() { el.playerHand.innerHTML=''; el.dealerHand.innerHTML=''; playerRendered=0; dealerRendered=0; }
-  function showBanner(text) { el.banner.textContent = text; el.banner.classList.add('show'); }
-  function hideBanner() { el.banner.classList.remove('show'); }
+  function showBanner(text) {
+    el.banner.textContent = text;
+    el.banner.classList.remove('win', 'lose');
+    if (/win|blackjack/i.test(text)) el.banner.classList.add('win');
+    else if (/bust|dealer wins|dealer blackjack/i.test(text)) el.banner.classList.add('lose');
+    el.banner.classList.add('show');
+  }
+  function hideBanner() { el.banner.classList.remove('show', 'win', 'lose'); }
   function updateStats() { el.bankroll.textContent = bankroll; el.currentBet.textContent = bet; }
+
+  function addMiniChip() {
+    const chip = document.createElement('div');
+    chip.className = 'mini-chip';
+    const jx = (Math.random() * 18 - 9).toFixed(1), jy = (Math.random() * 14 - 10).toFixed(1);
+    chip.style.setProperty('--jx', jx + 'px'); chip.style.setProperty('--jy', jy + 'px');
+    const hue = ['#2c9950','#5c5c5c','#2c6bb8','#b82c2c'][el.betStack.children.length % 4];
+    chip.style.background = `radial-gradient(circle, ${hue}cc, ${hue}55)`;
+    el.betStack.appendChild(chip);
+    if (el.betStack.children.length > 10) el.betStack.removeChild(el.betStack.firstChild);
+  }
+  function clearBetSpot() {
+    el.betStack.innerHTML = '';
+    el.betSpotAmount.textContent = '';
+    el.betSpotRing.classList.remove('lit');
+  }
+  function updateBetSpotAmount() {
+    el.betSpotAmount.textContent = bet > 0 ? '$' + bet : '';
+    el.betSpotRing.classList.toggle('lit', bet > 0);
+  }
 
   function renderChips() {
     document.querySelectorAll('#s-chipsRow .chip').forEach(chip => {
@@ -398,12 +525,13 @@ const SoloGame = (function () {
       chip.classList.toggle('disabled', state !== 'betting' || v > bankroll);
     });
   }
-  function placeBet(v) {
+  function placeBet(v, sourceEl) {
     if (state !== 'betting' || v > bankroll) return;
     bankroll -= v; bet += v; updateStats(); renderChips(); renderActions();
     el.betDisplay.innerHTML = `Bet: <b>$${bet}</b>`;
+    flyChip(sourceEl, el.betSpot, () => { addMiniChip(); updateBetSpotAmount(); });
   }
-  el.chipsRow.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => placeBet(Number(chip.dataset.val))));
+  el.chipsRow.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', (e) => placeBet(Number(chip.dataset.val), e.currentTarget)));
 
   function renderActions() {
     el.actionRow.innerHTML = '';
@@ -413,7 +541,7 @@ const SoloGame = (function () {
     };
     if (state === 'betting') {
       if (bet > 0) {
-        mk('Clear Bet', () => { bankroll += bet; bet = 0; updateStats(); renderChips(); renderActions(); el.betDisplay.textContent='Place your bet'; });
+        mk('Clear Bet', () => { bankroll += bet; bet = 0; updateStats(); renderChips(); renderActions(); el.betDisplay.textContent='Place your bet'; clearBetSpot(); });
         mk('Deal', dealRound, true);
       } else {
         el.betDisplay.textContent = bankroll > 0 ? 'Place your bet' : 'Out of chips — start a new shoe';
@@ -468,11 +596,11 @@ const SoloGame = (function () {
     else if (pVal > dVal) { msg='You Win!'; winnings=bet*2; }
     else if (pVal < dVal) { msg='Dealer Wins'; winnings=0; }
     else { msg='Push'; winnings=bet; }
-    bankroll += winnings; state='roundOver'; showBanner(msg); updateStats(); renderChips(); renderActions();
+    bankroll += winnings; state='roundOver'; clearBetSpot(); showBanner(msg); updateStats(); renderChips(); renderActions();
     el.betDisplay.innerHTML = winnings > bet ? `Won <b>$${winnings-bet}</b>` : (winnings===bet ? 'Push — bet returned' : `Lost <b>$${bet}</b>`);
   }
   function newHand() {
-    bet = 0; playerHand = []; dealerHand = []; state = 'betting'; hideBanner(); resetHandDom();
+    bet = 0; playerHand = []; dealerHand = []; state = 'betting'; hideBanner(); resetHandDom(); clearBetSpot();
     el.playerValue.textContent = '\u00A0'; el.dealerValue.textContent = '\u00A0';
     el.betDisplay.textContent = bankroll > 0 ? 'Place your bet' : 'Out of chips — start a new shoe';
     updateStats(); renderChips(); renderActions();
@@ -493,25 +621,63 @@ const SoloGame = (function () {
    ============================================================ */
 const MP = (function () {
   let ws = null, myId = null, myCode = null, currentState = null;
+  let myName = null, reconnecting = false, lastPhase = null;
 
-  function connect(onOpen) {
+  function addMpMiniChip() {
+    const stack = document.getElementById('mpBetStack');
+    if (!stack) return;
+    const chip = document.createElement('div');
+    chip.className = 'mini-chip';
+    const jx = (Math.random() * 18 - 9).toFixed(1), jy = (Math.random() * 14 - 10).toFixed(1);
+    chip.style.setProperty('--jx', jx + 'px'); chip.style.setProperty('--jy', jy + 'px');
+    const hue = ['#2c9950','#5c5c5c','#2c6bb8','#b82c2c'][stack.children.length % 4];
+    chip.style.background = `radial-gradient(circle, ${hue}cc, ${hue}55)`;
+    stack.appendChild(chip);
+    if (stack.children.length > 10) stack.removeChild(stack.firstChild);
+  }
+
+  function connect(onOpen, opts) {
+    opts = opts || {};
+    const attempt = opts.attempt || 1;
+    const isInitial = !!opts.initial;
     const url = getServerUrl();
     if (ws) { try { ws.close(); } catch(e){} }
     ws = new WebSocket(url);
-    ws.addEventListener('open', () => onOpen && onOpen());
+    let settled = false;
+    ws.addEventListener('open', () => { settled = true; onOpen && onOpen(); });
     ws.addEventListener('message', (e) => {
       const msg = JSON.parse(e.data);
-      if (msg.type === 'joined') { myId = msg.playerId; myCode = msg.code; onJoined(); }
+      if (msg.type === 'joined') { myId = msg.playerId; myCode = msg.code; reconnecting = false; onJoined(); }
       else if (msg.type === 'error') { document.getElementById('mpMenuErr').textContent = msg.message; }
       else if (msg.type === 'state') { currentState = msg.state; render(); }
     });
     ws.addEventListener('close', () => {
-      if (screens['screen-lobby'].classList.contains('active') || screens['screen-table'].classList.contains('active')) {
+      const inGame = screens['screen-lobby'].classList.contains('active') || screens['screen-table'].classList.contains('active');
+      if (isInitial && !settled) {
+        // First connection attempt failed before ever opening — likely the free host is
+        // asleep and waking up. Retry a few times with a growing delay instead of giving up.
+        if (attempt < 6) {
+          document.getElementById('mpMenuErr').textContent = 'Waking up the server… retrying (' + attempt + '/6)';
+          setTimeout(() => connect(onOpen, { initial: true, attempt: attempt + 1 }), Math.min(3000 + attempt * 2000, 12000));
+        } else {
+          document.getElementById('mpMenuErr').textContent = 'Could not reach server after several tries. Double-check the URL in Server Settings, or the host may be down.';
+        }
+        return;
+      }
+      if (inGame && !reconnecting && myCode && myName) {
+        // Try one silent reconnect — handles brief drops (e.g. host waking up from sleep).
+        reconnecting = true;
+        setTimeout(() => {
+          connect(() => send({ type: 'join', code: myCode, name: myName }));
+        }, 1200);
+      } else if (inGame) {
         alert('Disconnected from server.');
         showScreen('screen-menu');
       }
     });
-    ws.addEventListener('error', () => { document.getElementById('mpMenuErr').textContent = 'Could not reach server.'; });
+    ws.addEventListener('error', () => {
+      if (!isInitial) document.getElementById('mpMenuErr').textContent = 'Could not reach server.';
+    });
   }
 
   function send(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
@@ -580,6 +746,24 @@ const MP = (function () {
 
     document.getElementById('mpCenterMsg').textContent = st.phase === 'round_over' ? (st.roundMsg || 'Round over') : '';
 
+    const enteringBetting = st.phase === 'betting' && lastPhase !== 'betting';
+    const leavingBetting = st.phase !== 'betting' && lastPhase === 'betting';
+    if (enteringBetting || leavingBetting) {
+      const stack = document.getElementById('mpBetStack');
+      if (stack) stack.innerHTML = '';
+    }
+    lastPhase = st.phase;
+    const potAmountEl = document.getElementById('mpBetSpotAmount');
+    const potRingEl = document.querySelector('#mpBetSpot .s-bet-spot-ring');
+    if (st.phase === 'betting') {
+      const potTotal = st.players.reduce((sum, p) => sum + (p.bet || 0), 0);
+      if (potAmountEl) potAmountEl.textContent = potTotal > 0 ? '$' + potTotal : '';
+      if (potRingEl) potRingEl.classList.toggle('lit', potTotal > 0);
+    } else {
+      if (potAmountEl) potAmountEl.textContent = '';
+      if (potRingEl) potRingEl.classList.remove('lit');
+    }
+
     const seatsEl = document.getElementById('mpSeats'); seatsEl.innerHTML = '';
     st.players.forEach(p => {
       const seat = document.createElement('div');
@@ -600,7 +784,7 @@ const MP = (function () {
       val.textContent = (p.value === null || p.value === undefined) ? (p.hand.length ? '?' : '') : p.value;
       seat.appendChild(val);
       const status = document.createElement('div');
-      status.className = 'seat-status';
+      status.className = 'seat-status ' + p.status;
       status.textContent = statusText;
       seat.appendChild(status);
       seatsEl.appendChild(seat);
@@ -614,9 +798,12 @@ const MP = (function () {
       [25, 50, 100, 250].forEach(v => {
         const chip = document.createElement('div');
         chip.className = 'chip c' + v;
-        chip.textContent = '$' + v;
+        chip.innerHTML = '<span>$' + v + '</span>';
         if (v > me.bankroll) chip.classList.add('disabled');
-        chip.addEventListener('click', () => send({ type:'bet', amount: v }));
+        chip.addEventListener('click', (e) => {
+          flyChip(e.currentTarget, document.getElementById('mpBetSpot'), addMpMiniChip);
+          send({ type:'bet', amount: v });
+        });
         betArea.appendChild(chip);
       });
       const label = document.createElement('div');
@@ -653,9 +840,9 @@ const MP = (function () {
   function hideEndOverlay() { document.getElementById('endOverlay').style.display = 'none'; }
 
   return {
-    create(name) { connect(() => send({ type:'create', name })); },
-    join(code, name) { connect(() => send({ type:'join', code, name })); },
-    leave() { send({ type:'leave' }); if (ws) ws.close(); ws = null; currentState = null; clearInterval(countdownTimer); },
+    create(name) { myName = name; connect(() => send({ type:'create', name }), { initial: true }); },
+    join(code, name) { myName = name; connect(() => send({ type:'join', code, name }), { initial: true }); },
+    leave() { send({ type:'leave' }); if (ws) ws.close(); ws = null; currentState = null; myCode = null; myName = null; clearInterval(countdownTimer); },
     startNow() { send({ type:'start_now' }); },
   };
 })();
