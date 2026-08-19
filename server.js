@@ -66,7 +66,7 @@ const lobbies = new Map();
 function makePlayer({ id, name, ws, isBot }) {
   return {
     id, name, ws, isBot,
-    bankroll: isBot ? BOT_BANKROLL : STARTING_BANKROLL,
+    bankroll: STARTING_BANKROLL,
     bet: 0, hand: [], status: 'seated', // seated|betting|playing|stood|bust|blackjack|surrendered|eliminated|left
     connected: !isBot,
   };
@@ -87,14 +87,16 @@ class Lobby {
   }
 
   broadcast() {
-    const payload = JSON.stringify({ type: 'state', state: this.publicState() });
     for (const p of this.players) {
-      if (!p.isBot && p.ws && p.ws.readyState === 1) p.ws.send(payload);
+      if (!p.isBot && p.ws && p.ws.readyState === 1) {
+        p.ws.send(JSON.stringify({ type: 'state', state: this.publicState(p.id) }));
+      }
     }
   }
 
-  publicState() {
+  publicState(viewerId) {
     const dealerHidden = this.phase === 'playing';
+    const revealAllHands = this.phase === 'dealer' || this.phase === 'round_over' || this.phase === 'game_over';
     return {
       code: this.code,
       phase: this.phase,
@@ -107,11 +109,15 @@ class Lobby {
         value: dealerHidden ? cardValue((this.dealerHand[0] || {}).rank || '2') : handValue(this.dealerHand),
         hidden: dealerHidden,
       },
-      players: this.players.map(p => ({
-        id: p.id, name: p.name, isBot: p.isBot, bankroll: p.bankroll,
-        bet: p.bet, hand: p.hand, status: p.status, connected: p.connected,
-        value: p.hand.length ? handValue(p.hand) : 0,
-      })),
+      players: this.players.map(p => {
+        const reveal = revealAllHands || p.id === viewerId;
+        return {
+          id: p.id, name: p.name, isBot: p.isBot, bankroll: p.bankroll,
+          bet: p.bet, status: p.status, connected: p.connected,
+          hand: reveal ? p.hand : p.hand.map(() => ({ hidden: true })),
+          value: reveal ? (p.hand.length ? handValue(p.hand) : 0) : null,
+        };
+      }),
     };
   }
 
@@ -154,6 +160,13 @@ class Lobby {
     lobbies.delete(this.code);
   }
 
+  forceStart(playerId) {
+    if (playerId !== this.host) return;
+    if (this.phase !== 'waiting' && this.phase !== 'countdown') return;
+    this.clearTimer();
+    this.fillAndStart();
+  }
+
   startCountdown() {
     if (this.phase !== 'waiting') return;
     this.phase = 'countdown';
@@ -169,9 +182,11 @@ class Lobby {
   }
 
   fillAndStart() {
-    let botNum = 1;
-    while (this.players.length < MAX_SEATS) {
-      this.players.push(makePlayer({ id: 'bot-' + (botNum++) + '-' + this.code, name: 'Bot ' + botNum, isBot: true }));
+    if (this.players.length === 1) {
+      let botNum = 1;
+      while (this.players.length < MAX_SEATS) {
+        this.players.push(makePlayer({ id: 'bot-' + (botNum++) + '-' + this.code, name: 'Bot ' + botNum, isBot: true }));
+      }
     }
     this.startBettingRound();
   }
@@ -372,6 +387,8 @@ wss.on('connection', (ws) => {
       const lobby = lobbies.get(lobbyCode); if (lobby) lobby.placeBet(playerId, Number(msg.amount) || 0);
     } else if (msg.type === 'action') {
       const lobby = lobbies.get(lobbyCode); if (lobby) lobby.playerAction(playerId, msg.action);
+    } else if (msg.type === 'start_now') {
+      const lobby = lobbies.get(lobbyCode); if (lobby) lobby.forceStart(playerId);
     } else if (msg.type === 'leave') {
       const lobby = lobbies.get(lobbyCode); if (lobby) lobby.removePlayer(playerId);
       lobbyCode = null; playerId = null;
