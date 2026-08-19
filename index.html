@@ -550,23 +550,16 @@ const MP = (function () {
     }
     clearInterval(countdownTimer);
     const cd = document.getElementById('lobbyCountdown');
-    if (st.phase === 'countdown' && st.deadline) {
+    if (st.phase === 'countdown') {
       const soloOnly = st.players.length === 1;
-      const tick = () => {
-        const secs = Math.max(0, Math.ceil((st.deadline - Date.now()) / 1000));
-        if (secs > 0) {
-          cd.textContent = soloOnly ? `Filling empty seats with bots in ${secs}s…` : `Starting in ${secs}s…`;
-        } else {
-          cd.textContent = 'Starting…';
-        }
-      };
-      tick();
-      countdownTimer = setInterval(tick, 250);
+      cd.textContent = st.players.length >= 5
+        ? 'Table full — starting…'
+        : (soloOnly ? "Waiting — press Start Now to fill the table with bots" : 'Waiting for the host to press Start Now…');
     } else {
       cd.innerHTML = '&nbsp;';
     }
     const startBtn = document.getElementById('startNowBtn');
-    startBtn.style.display = (st.host === myId) ? 'block' : 'none';
+    startBtn.style.display = (st.host === myId && st.players.length < 5) ? 'block' : 'none';
   }
 
   function suitColor(card) { return card.color; }
